@@ -60,7 +60,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-
+import java.util.Date;
+import java.sql.Timestamp;
 @Path("/")
 public class Gardenshift {
 
@@ -72,7 +73,7 @@ public class Gardenshift {
 		try {
 
 			mongo = new Mongo("127.3.119.1", 27017);
-		//	mongo = new Mongo("localhost", 27017);
+			//mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
 			db.authenticate("admin", "redhat".toCharArray());
@@ -361,7 +362,7 @@ public class Gardenshift {
 	public Response isUserAvailable(@PathParam("username") String username) {
 
 		/*
-		 * Displays information for a user
+		 * checks if use is available
 		 */
 
 		String msg = "";
@@ -1083,6 +1084,270 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 
          return Response.status(200).entity(msg).build();
 } 
+
+@Path("send_notification/{username}/{type}/{from}/{text}")
+@GET
+	public Response send_notification(@PathParam("username") String username,
+			@PathParam("type") String type, @PathParam("from") String from,
+			@PathParam("text") String text) {
+
+	/*
+	 * sends a notification to the user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject sendNotif = new BasicDBObject();
+        sendNotif.put("username", username);
+
+       
+        BasicDBObject document = new BasicDBObject();
+        
+            
+            document.put("type", type);
+            document.put("from",from);
+            document.put("text",text);
+            document.put("timestamp",System.currentTimeMillis());
+            
+            BasicDBObject temp = new BasicDBObject();
+            temp.put("$push", new BasicDBObject("notifications_unread", document));
+
+            collection.update(sendNotif, temp, true, true);
+
+            return Response.status(200).entity("success").build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("update_notification_to_read/{username}/{timestamp}")
+@GET
+	public Response update_notification(@PathParam("username") String username,
+			@PathParam("timestamp") Long timestamp
+			) {
+
+	/*
+	 * sends a notification to the user.
+	 */
+
+	
+	try {
+			
+			BasicDBObject searchQuery = new BasicDBObject();
+			
+			BasicDBObject keys = new BasicDBObject();
+			
+			DBCollection collection = db.getCollection("users");
+		
+			keys.put("notifications_unread", 1);
+			
+			searchQuery.put("username",username);
+			DBCursor cursor = collection.find(searchQuery, keys);
+
+			while (cursor.hasNext()) {
+				
+					BasicDBObject result = (BasicDBObject) cursor.next();
+					int i = result.size();
+				
+					@SuppressWarnings("unchecked")
+					ArrayList<BasicDBObject> notifs =
+					(ArrayList<BasicDBObject>)result.get("notifications_unread"); // * See Note
+					for(BasicDBObject embedded : notifs){
+					Long ts = (Long)embedded.get("timestamp");
+					if(ts.equals(timestamp)){
+					String from = (String)embedded.get("from");
+					String type = (String)embedded.get("type");
+					String text = (String)embedded.get("text");
+					
+					Mongo mongo1 = new Mongo("127.3.119.1", 27017);
+					//Mongo mongo1 = new Mongo("localhost",27017);
+					DB db1 = mongo1.getDB("gardenshift");
+					db1.authenticate("admin", "redhat".toCharArray());
+					DBCollection collection1 = db1.getCollection("users");
+			        BasicDBObject updNotif = new BasicDBObject();
+			        updNotif.put("username", username);
+			        BasicDBObject document1 = new BasicDBObject();
+		            document1.put("type", type);
+		            document1.put("from",from);
+		            document1.put("text",text);
+		            document1.put("timestamp",timestamp);
+		            BasicDBObject temp = new BasicDBObject();
+		            temp.put("$push", new BasicDBObject("notifications_read", document1));
+		            collection.update(updNotif, temp, true, true);
+		            
+//		        	Mongo mongo2 = new Mongo("127.3.119.1", 27017);
+//					//Mongo mongo2 = new Mongo("localhost",27017);
+//					DB db2 = mongo1.getDB("gardenshift");
+//					db2.authenticate("admin", "redhat".toCharArray());
+					DBCollection collection2 = db.getCollection("users");
+					BasicDBObject updateNotif = new BasicDBObject();
+					updateNotif.put("username", username);
+		
+					BasicDBObject document2 = new BasicDBObject();
+		
+					document2.put("timestamp", timestamp);
+		
+					BasicDBObject temp1 = new BasicDBObject();
+							
+				temp1.put("$pull", new BasicDBObject("notifications_unread",	document2));
+					collection2.update(updateNotif, temp1, true, true);
+		            
+		            
+						
+					}
+					
+					}
+			}
+
+		
+            return Response.status(200).entity("success").build();
+	}catch(Exception e){return Response.status(500).entity(e).build();}
+
+}
+
+@Path("get_notification_unread/{username}")
+@GET
+	public Response get_notification_unread(@PathParam("username") String username) {
+
+	/*
+	 * gives all the unread notifications of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject getNotif = new BasicDBObject();
+        getNotif.put("username", username);
+
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("notifications_unread" ,1 );
+        DBCursor cursor = collection.find( getNotif, keys);
+        
+        String msg = "";
+        while (cursor.hasNext()) {
+    			msg += cursor.next() ;
+    		}
+
+    	return Response.status(200).entity(msg).build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+
+@Path("get_notification_read/{username}")
+@GET
+	public Response get_notification_read(@PathParam("username") String username) {
+
+	/*
+	 * gives all the unread notifications of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject getNotif = new BasicDBObject();
+        getNotif.put("username", username);
+
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("notifications_read" ,1 );
+        DBCursor cursor = collection.find( getNotif, keys);
+        
+        String msg = "";
+
+    		while (cursor.hasNext()) {
+    			msg += cursor.next() ;
+    		}
+
+            return Response.status(200).entity(msg).build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("delete_notification_read/{username}/{timestamp}")
+@GET
+	public Response delete_notification_read(@PathParam("username") String username,@PathParam("timestamp") Long timestamp) {
+
+	/*
+	 * deletes a particular read notification of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection2 = db.getCollection("users");
+		BasicDBObject updateNotif = new BasicDBObject();
+		updateNotif.put("username", username);
+
+		BasicDBObject document2 = new BasicDBObject();
+
+		document2.put("timestamp", timestamp);
+
+		BasicDBObject temp1 = new BasicDBObject();
+				
+	temp1.put("$pull", new BasicDBObject("notifications_read",	document2));
+		collection2.update(updateNotif, temp1, true, true);
+		return Response.status(200).entity("success").build();
+		
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("delete_notification_unread/{username}/{timestamp}")
+@GET
+	public Response delete_notification_unread(@PathParam("username") String username,@PathParam("timestamp") Long timestamp) {
+
+	/*
+	 * deletes a particular unread notification of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection2 = db.getCollection("users");
+		BasicDBObject updateNotif = new BasicDBObject();
+		updateNotif.put("username", username);
+
+		BasicDBObject document2 = new BasicDBObject();
+
+		document2.put("timestamp", timestamp);
+
+		BasicDBObject temp1 = new BasicDBObject();
+				
+	temp1.put("$pull", new BasicDBObject("notifications_unread",	document2));
+		collection2.update(updateNotif, temp1, true, true);
+		return Response.status(200).entity("success").build();
+		
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+
+@Path("reply_notification/{username}/{timestamp}/{from}/{text}")
+@GET
+	public Response reply_notification(@PathParam("username") String username,@PathParam("timestamp") Long timestamp) {
+
+	/*
+	 * sends a reply to the user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection2 = db.getCollection("users");
+		BasicDBObject updateNotif = new BasicDBObject();
+		updateNotif.put("username", username);
+
+		BasicDBObject document2 = new BasicDBObject();
+
+		document2.put("timestamp", timestamp);
+
+		BasicDBObject temp1 = new BasicDBObject();
+				
+	temp1.put("$pull", new BasicDBObject("notifications_unread",	document2));
+		collection2.update(updateNotif, temp1, true, true);
+		return Response.status(200).entity("success").build();
+		
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
 
 
 }
