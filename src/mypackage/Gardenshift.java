@@ -73,7 +73,7 @@ public class Gardenshift {
 		try {
 
 			mongo = new Mongo("127.3.119.1", 27017);
-			//mongo = new Mongo("localhost", 27017);
+		//	mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
 			db.authenticate("admin", "redhat".toCharArray());
@@ -502,6 +502,42 @@ public class Gardenshift {
 		}
 
 	}
+	
+	@Path("status")
+	@POST
+	public Response updateStatus(@FormParam("username") String username,
+			@FormParam("status_txt") String status_txt )
+			 {
+
+		/*
+		 * Stores user's personal information in the database
+		 */
+
+		
+		try {
+					DBCollection collection = db.getCollection("users");
+					BasicDBObject update = new BasicDBObject();
+		            update.put("username", username);
+	
+		           
+		            BasicDBObject document = new BasicDBObject();
+	            
+	                document.put("text", status_txt);
+	                document.put("date", new Date().toString());               
+	                
+	                BasicDBObject temp = new BasicDBObject();
+	                temp.put("$push", new BasicDBObject("status", document));
+
+	                collection.update(update, temp, true, true);
+
+	                return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
+	}
+	
 
 	@GET
 	@Path("deleteuser/{username}")
