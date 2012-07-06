@@ -72,11 +72,11 @@ public class Gardenshift {
 
 		try {
 
-		//	mongo = new Mongo("127.3.119.1", 27017);
-			mongo = new Mongo("localhost", 27017);
+			mongo = new Mongo("127.3.119.1", 27017);
+		//	mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
-		//	db.authenticate("admin", "redhat".toCharArray());
+			db.authenticate("admin", "redhat".toCharArray());
 
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
