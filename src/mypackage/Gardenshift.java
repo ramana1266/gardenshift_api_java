@@ -72,11 +72,11 @@ public class Gardenshift {
 
 		try {
 
-			mongo = new Mongo("127.3.119.1", 27017);
-		//	mongo = new Mongo("localhost", 27017);
+		//	mongo = new Mongo("127.3.119.1", 27017);
+			mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
-			db.authenticate("admin", "redhat".toCharArray());
+		//	db.authenticate("admin", "redhat".toCharArray());
 
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -510,7 +510,7 @@ public class Gardenshift {
 			 {
 
 		/*
-		 * Stores user's personal information in the database
+		 * Add a new status to user's database
 		 */
 
 		
@@ -535,6 +535,39 @@ public class Gardenshift {
 		} catch (Exception e) {
 			return Response.status(503).entity("failed").build();
 		}
+
+	}
+	
+	@GET
+	@Path("delete_status/{username}/{date}")
+	@Produces("application/json")
+	public Response delete_userstatus(@PathParam("date") String date, @PathParam("username") String username) {
+	    /*
+	     * This method deletes a particular status entry from user
+	     */
+	    try {
+
+	    	DBCollection collection = db.getCollection("users");
+            
+            BasicDBObject update = new BasicDBObject();
+            update.put("username", username);
+
+            // check if the entry is not a duplicate
+            BasicDBObject document = new BasicDBObject();
+            
+                document.put("date", date);              
+                
+                BasicDBObject temp = new BasicDBObject();
+                temp.put("$pull", new BasicDBObject("status", document));
+
+                collection.update(update, temp, true, true);
+               
+                return Response.status(200).entity("success").build();
+
+
+	    } catch (Exception e) {
+	        return Response.status(503).entity("failed").build();
+	    }
 
 	}
 	
