@@ -503,8 +503,8 @@ public class Gardenshift {
 
 	}
 	
-	@Path("status/")
-	@GET
+	@Path("status")
+	@POST
 	public Response updateStatus(@FormParam("username") String username,
 			@FormParam("status_txt") String status_txt )
 			 {
