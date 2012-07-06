@@ -1085,11 +1085,11 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
          return Response.status(200).entity(msg).build();
 } 
 
-@Path("send_notification/{username}/{type}/{from}/{text}")
-@GET
-	public Response send_notification(@PathParam("username") String username,
-			@PathParam("type") String type, @PathParam("from") String from,
-			@PathParam("text") String text) {
+@Path("send_notification")
+@POST
+	public Response send_notification(@FormParam("username") String username,
+			@FormParam("type") String type, @FormParam("from") String from,
+			@FormParam("text") String text) {
 
 	/*
 	 * sends a notification to the user.
@@ -1320,34 +1320,6 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 
 }
 
-@Path("reply_notification/{username}/{timestamp}/{from}/{text}")
-@GET
-	public Response reply_notification(@PathParam("username") String username,@PathParam("timestamp") Long timestamp) {
-
-	/*
-	 * sends a reply to the user.
-	 */
-
-	
-	try {
-		
-		DBCollection collection2 = db.getCollection("users");
-		BasicDBObject updateNotif = new BasicDBObject();
-		updateNotif.put("username", username);
-
-		BasicDBObject document2 = new BasicDBObject();
-
-		document2.put("timestamp", timestamp);
-
-		BasicDBObject temp1 = new BasicDBObject();
-				
-	temp1.put("$pull", new BasicDBObject("notifications_unread",	document2));
-		collection2.update(updateNotif, temp1, true, true);
-		return Response.status(200).entity("success").build();
-		
-	}catch(Exception e){return Response.status(500).entity("failed").build();}
-
-}
 
 
 }
