@@ -15,6 +15,8 @@
  * Hilay Khatri				Update personal records 									06-11-2012
  * 
  * Hilay Khatri				Authenticate user											06-11-2012
+ * 
+ * Hilay Khatri				Add new status/delete status
  *
  */
 
@@ -568,6 +570,90 @@ public class Gardenshift {
 	    } catch (Exception e) {
 	        return Response.status(503).entity("failed").build();
 	    }
+
+	}
+	
+	@Path("add_friends")
+	@POST
+	public Response addfriends(@FormParam("username") String username,
+			@FormParam("friend_name") String friend_name )
+			 {
+
+		/*
+		 * Add a new friend request to user's database
+		 */
+
+		
+		try {
+					DBCollection collection = db.getCollection("users");
+					BasicDBObject update = new BasicDBObject();
+		            update.put("username", username);
+	
+		           
+		            BasicDBObject document = new BasicDBObject();
+	            
+	                document.put("friends_username", friend_name);
+	                document.put("status", "pending");               
+	                
+	                BasicDBObject temp = new BasicDBObject();
+	                temp.put("$push", new BasicDBObject("friends", document));
+
+	                collection.update(update, temp, true, true);
+
+	                return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
+	}
+	
+	@Path("accept_friends")
+	@POST
+	public Response acceptFriends(@FormParam("username") String username,
+			@FormParam("friend_name") String friend_name)
+			{
+
+		/*
+		 * Accepts invitation of a friend and updates the user's database to reflect the change in the friends
+		 */
+
+		
+		try {
+			DBCollection collection = db.getCollection("users");
+			
+				 	BasicDBObject update = new BasicDBObject();
+		            update.put("username", username);
+
+		            
+		            BasicDBObject document = new BasicDBObject();
+	            
+	                document.put("friends_username", friend_name);              
+	                
+	                BasicDBObject temp = new BasicDBObject();
+	                temp.put("$pull", new BasicDBObject("friends", document));
+
+	                collection.update(update, temp, true, true);
+	                
+	                BasicDBObject update1 = new BasicDBObject();
+		            update1.put("username", username);
+	
+		           
+		            BasicDBObject document1 = new BasicDBObject();
+	            
+	                document1.put("friends_username", friend_name);
+	                document1.put("status", "accepted");               
+	                
+	                BasicDBObject temp1 = new BasicDBObject();
+	                temp1.put("$push", new BasicDBObject("friends", document1));
+
+	                collection.update(update1, temp1, true, true);
+
+	                return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
 
 	}
 	
