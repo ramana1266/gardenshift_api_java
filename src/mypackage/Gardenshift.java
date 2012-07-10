@@ -587,12 +587,12 @@ public class Gardenshift {
 		try {
 					DBCollection collection = db.getCollection("users");
 					BasicDBObject update = new BasicDBObject();
-		            update.put("username", username);
+		            update.put("username", friend_name);
 	
 		           
 		            BasicDBObject document = new BasicDBObject();
 	            
-	                document.put("friends_username", friend_name);
+	                document.put("friends_username", username);
 	                document.put("status", "pending");               
 	                
 	                BasicDBObject temp = new BasicDBObject();
@@ -648,6 +648,22 @@ public class Gardenshift {
 	                temp1.put("$push", new BasicDBObject("friends", document1));
 
 	                collection.update(update1, temp1, true, true);
+	                
+	                
+	                
+	                BasicDBObject update2 = new BasicDBObject();
+		            update2.put("username", friend_name);
+	
+		           
+		            BasicDBObject document2 = new BasicDBObject();
+	            
+	                document2.put("friends_username", username);
+	                document2.put("status", "accepted");               
+	                
+	                BasicDBObject temp2 = new BasicDBObject();
+	                temp2.put("$push", new BasicDBObject("friends", document2));
+
+	                collection.update(update2, temp2, true, true);
 
 	                return Response.status(200).entity("success").build();
 
