@@ -1390,9 +1390,9 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 	}catch(Exception e){return Response.status(500).entity("failed").build();}
 
 }
-@Path("add_bulletin/{username}/{text}")
-@GET
-	public Response add_bulletin(@PathParam("username") String username,@PathParam("text") String text) {
+@Path("add_bulletin")
+@POST
+	public Response add_bulletin(@FormParam("username") String username,@FormParam("text") String text) {
 
 	/*
 	 * updates the bulletin.
