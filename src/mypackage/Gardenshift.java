@@ -73,7 +73,7 @@ public class Gardenshift {
 		try {
 
 			mongo = new Mongo("127.3.119.1", 27017);
-		//	mongo = new Mongo("localhost", 27017);
+			//mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
 			db.authenticate("admin", "redhat".toCharArray());
@@ -1303,6 +1303,8 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 
 }
 
+
+
 @Path("get_notification_read/{username}")
 @GET
 	public Response get_notification_read(@PathParam("username") String username) {
@@ -1386,6 +1388,247 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 		return Response.status(200).entity("success").build();
 		
 	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("add_bulletin/{username}/{text}")
+@GET
+	public Response add_bulletin(@PathParam("username") String username,@PathParam("text") String text) {
+
+	/*
+	 * updates the bulletin.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject sendNotif = new BasicDBObject();
+        sendNotif.put("username", username);
+
+       
+        BasicDBObject document = new BasicDBObject();
+        
+            
+            document.put("text", text);
+            
+            BasicDBObject temp = new BasicDBObject();
+            temp.put("$push", new BasicDBObject("bulletin", document));
+
+            collection.update(sendNotif, temp, true, true);
+
+            return Response.status(200).entity("success").build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+}
+
+@Path("flush_bulletin/{username}")
+@GET
+	public Response flush_bulletin(@PathParam("username") String username) {
+
+	/*
+	 * updates the bulletin.
+	 */
+
+	
+	try {
+		
+		BasicDBObject searchQuery = new BasicDBObject();
+		
+		BasicDBObject keys = new BasicDBObject();
+		
+		DBCollection collection = db.getCollection("users");
+	
+		keys.put("bulletin", 1);
+		
+		searchQuery.put("username",username);
+		DBCursor cursor = collection.find(searchQuery, keys);
+
+		while (cursor.hasNext()) {
+			
+				BasicDBObject result = (BasicDBObject) cursor.next();
+				int i = result.size();
+			
+				@SuppressWarnings("unchecked")
+				ArrayList<BasicDBObject> bulletins =
+				(ArrayList<BasicDBObject>)result.get("bulletin"); // * See Note
+				for(BasicDBObject embedded : bulletins){
+				
+				String text = (String)embedded.get("text");
+				
+				Mongo mongo1 = new Mongo("127.3.119.1", 27017);
+				//Mongo mongo1 = new Mongo("localhost",27017);
+				DB db1 = mongo1.getDB("gardenshift");
+				db1.authenticate("admin", "redhat".toCharArray());
+				DBCollection collection1 = db1.getCollection("users");
+		        BasicDBObject updNotif = new BasicDBObject();
+		        updNotif.put("username", username);
+		        BasicDBObject document1 = new BasicDBObject();
+	            
+	            document1.put("text",text);
+	            
+	            BasicDBObject temp = new BasicDBObject();
+	            temp.put("$push", new BasicDBObject("bulletin_archive", document1));
+	            collection.update(updNotif, temp, true, true);
+	            
+//	        	Mongo mongo2 = new Mongo("127.3.119.1", 27017);
+//				//Mongo mongo2 = new Mongo("localhost",27017);
+//				DB db2 = mongo1.getDB("gardenshift");
+//				db2.authenticate("admin", "redhat".toCharArray());
+				DBCollection collection2 = db.getCollection("users");
+				BasicDBObject updateNotif = new BasicDBObject();
+				updateNotif.put("username", username);
+	
+				BasicDBObject document2 = new BasicDBObject();
+	
+	
+				BasicDBObject temp1 = new BasicDBObject();
+						
+			temp1.put("$pull", new BasicDBObject("bulletin",document1));
+				collection2.update(updateNotif, temp1, true, true);
+				
+				}
+		}
+		return Response.status(200).entity("success").build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}}
+
+@Path("get_bulletin/{username}")
+@GET
+	public Response get_bulletin(@PathParam("username") String username) {
+
+	/*
+	 * gives all the bulletin notifications of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject getNotif = new BasicDBObject();
+        getNotif.put("username", username);
+
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("bulletin" ,1 );
+        DBCursor cursor = collection.find( getNotif, keys);
+        
+        String msg = "";
+
+    		while (cursor.hasNext()) {
+    			msg += cursor.next() ;
+    		}
+
+            return Response.status(200).entity(msg).build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("get_bulletin_archive/{username}")
+@GET
+	public Response get_bulletin_archive(@PathParam("username") String username) {
+
+	/*
+	 * gives all the bulletin archive notifications of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject getNotif = new BasicDBObject();
+        getNotif.put("username", username);
+
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("bulletin_archive" ,1 );
+        DBCursor cursor = collection.find( getNotif, keys);
+        
+        String msg = "";
+
+    		while (cursor.hasNext()) {
+    			msg += cursor.next() ;
+    		}
+
+            return Response.status(200).entity(msg).build();
+	}catch(Exception e){return Response.status(500).entity("failed").build();}
+
+}
+@Path("add_friends")
+@POST
+public Response addfriends(@FormParam("username") String username,
+		@FormParam("friend_name") String friend_name )
+		 {
+
+	/*
+	 * Add a new friend request to user's database
+	 */
+
+	
+	try {
+				DBCollection collection = db.getCollection("users");
+				BasicDBObject update = new BasicDBObject();
+	            update.put("username", username);
+
+	           
+	            BasicDBObject document = new BasicDBObject();
+            
+                document.put("friends_username", friend_name);
+                document.put("status", "pending");               
+                
+                BasicDBObject temp = new BasicDBObject();
+                temp.put("$push", new BasicDBObject("friends", document));
+
+                collection.update(update, temp, true, true);
+
+                return Response.status(200).entity("success").build();
+
+	} catch (Exception e) {
+		return Response.status(503).entity("failed").build();
+	}
+
+}
+
+@Path("accept_friends")
+@POST
+public Response acceptFriends(@FormParam("username") String username,
+		@FormParam("friend_name") String friend_name)
+		{
+
+	/*
+	 * Accepts invitation of a friend and updates the user's database to reflect the change in the friends
+	 */
+
+	
+	try {
+		DBCollection collection = db.getCollection("users");
+		
+			 	BasicDBObject update = new BasicDBObject();
+	            update.put("username", username);
+
+	            
+	            BasicDBObject document = new BasicDBObject();
+            
+                document.put("friends_username", friend_name);              
+                
+                BasicDBObject temp = new BasicDBObject();
+                temp.put("$pull", new BasicDBObject("friends", document));
+
+                collection.update(update, temp, true, true);
+                
+                BasicDBObject update1 = new BasicDBObject();
+	            update1.put("username", username);
+
+	           
+	            BasicDBObject document1 = new BasicDBObject();
+            
+                document1.put("friends_username", friend_name);
+                document1.put("status", "accepted");               
+                
+                BasicDBObject temp1 = new BasicDBObject();
+                temp1.put("$push", new BasicDBObject("friends", document1));
+
+                collection.update(update1, temp1, true, true);
+
+                return Response.status(200).entity("success").build();
+
+	} catch (Exception e) {
+		return Response.status(503).entity("failed").build();
+	}
 
 }
 
