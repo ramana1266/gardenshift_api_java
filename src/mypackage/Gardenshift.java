@@ -1548,91 +1548,97 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 	}catch(Exception e){return Response.status(500).entity("failed").build();}
 
 }
-@Path("add_friends")
-@POST
-public Response addfriends(@FormParam("username") String username,
-		@FormParam("friend_name") String friend_name )
-		 {
 
-	/*
-	 * Add a new friend request to user's database
-	 */
+	@Path("add_friends")
+	@POST
+	public Response addfriends(@FormParam("username") String username,
+			@FormParam("friend_name") String friend_name) {
 
-	
-	try {
-				DBCollection collection = db.getCollection("users");
-				BasicDBObject update = new BasicDBObject();
-	            update.put("username", username);
+		/*
+		 * Add a new friend request to user's database
+		 */
 
-	           
-	            BasicDBObject document = new BasicDBObject();
-            
-                document.put("friends_username", friend_name);
-                document.put("status", "pending");               
-                
-                BasicDBObject temp = new BasicDBObject();
-                temp.put("$push", new BasicDBObject("friends", document));
+		try {
+			DBCollection collection = db.getCollection("users");
+			BasicDBObject update = new BasicDBObject();
+			update.put("username", friend_name);
 
-                collection.update(update, temp, true, true);
+			BasicDBObject document = new BasicDBObject();
 
-                return Response.status(200).entity("success").build();
+			document.put("friends_username", username);
+			document.put("status", "pending");
 
-	} catch (Exception e) {
-		return Response.status(503).entity("failed").build();
+			BasicDBObject temp = new BasicDBObject();
+			temp.put("$push", new BasicDBObject("friends", document));
+
+			collection.update(update, temp, true, true);
+
+			return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
 	}
 
-}
+	@Path("accept_friends")
+	@POST
+	public Response acceptFriends(@FormParam("username") String username,
+			@FormParam("friend_name") String friend_name) {
 
-@Path("accept_friends")
-@POST
-public Response acceptFriends(@FormParam("username") String username,
-		@FormParam("friend_name") String friend_name)
-		{
+		/*
+		 * Accepts invitation of a friend and updates the user's database to
+		 * reflect the change in the friends
+		 */
 
-	/*
-	 * Accepts invitation of a friend and updates the user's database to reflect the change in the friends
-	 */
+		try {
+			DBCollection collection = db.getCollection("users");
 
-	
-	try {
-		DBCollection collection = db.getCollection("users");
-		
-			 	BasicDBObject update = new BasicDBObject();
-	            update.put("username", username);
+			BasicDBObject update = new BasicDBObject();
+			update.put("username", username);
 
-	            
-	            BasicDBObject document = new BasicDBObject();
-            
-                document.put("friends_username", friend_name);              
-                
-                BasicDBObject temp = new BasicDBObject();
-                temp.put("$pull", new BasicDBObject("friends", document));
+			BasicDBObject document = new BasicDBObject();
 
-                collection.update(update, temp, true, true);
-                
-                BasicDBObject update1 = new BasicDBObject();
-	            update1.put("username", username);
+			document.put("friends_username", friend_name);
 
-	           
-	            BasicDBObject document1 = new BasicDBObject();
-            
-                document1.put("friends_username", friend_name);
-                document1.put("status", "accepted");               
-                
-                BasicDBObject temp1 = new BasicDBObject();
-                temp1.put("$push", new BasicDBObject("friends", document1));
+			BasicDBObject temp = new BasicDBObject();
+			temp.put("$pull", new BasicDBObject("friends", document));
 
-                collection.update(update1, temp1, true, true);
+			collection.update(update, temp, true, true);
 
-                return Response.status(200).entity("success").build();
+			BasicDBObject update1 = new BasicDBObject();
+			update1.put("username", username);
 
-	} catch (Exception e) {
-		return Response.status(503).entity("failed").build();
+			BasicDBObject document1 = new BasicDBObject();
+
+			document1.put("friends_username", friend_name);
+			document1.put("status", "accepted");
+
+			BasicDBObject temp1 = new BasicDBObject();
+			temp1.put("$push", new BasicDBObject("friends", document1));
+
+			collection.update(update1, temp1, true, true);
+
+			BasicDBObject update2 = new BasicDBObject();
+			update2.put("username", friend_name);
+
+			BasicDBObject document2 = new BasicDBObject();
+
+			document2.put("friends_username", username);
+			document2.put("status", "accepted");
+
+			BasicDBObject temp2 = new BasicDBObject();
+			temp2.put("$push", new BasicDBObject("friends", document2));
+
+			collection.update(update2, temp2, true, true);
+
+			return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
 	}
-
-}
-
-
 
 }
 
