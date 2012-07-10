@@ -73,7 +73,7 @@ public class Gardenshift {
 		try {
 
 			mongo = new Mongo("127.3.119.1", 27017);
-			//mongo = new Mongo("localhost", 27017);
+		//	mongo = new Mongo("localhost", 27017);
 			db = mongo.getDB("gardenshift");
 
 			db.authenticate("admin", "redhat".toCharArray());
@@ -157,6 +157,7 @@ public class Gardenshift {
 					document.put("creation_date", new Date().toString());
 					document.put("email", emailAdd);
 					document.put("name", "");
+					document.put("picture", "http://www.worldbiofuelsmarkets.com/EF/Images/blank_profile_pic.jpg");
 					document.put("zipcode", ""); // HTML5 Geolocation API can
 													// also be used
 
@@ -491,6 +492,35 @@ public class Gardenshift {
 			
 			System.out.println(newDocument);
 
+			collection.update(
+					new BasicDBObject().append("username", username),
+					newDocument);
+
+			return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
+	}
+	
+	@Path("change_picture")
+	@POST
+	public Response change_picture(@FormParam("username") String username,			
+			@FormParam("url") String url)
+			 {
+
+		/*
+		 * Stores user's personal information in the database
+		 */
+
+		
+		try {
+			DBCollection collection = db.getCollection("users");
+			BasicDBObject newDocument = new BasicDBObject().append("$set",
+					new BasicDBObject().append("picture", url));
+			
+			
 			collection.update(
 					new BasicDBObject().append("username", username),
 					newDocument);
@@ -1641,4 +1671,3 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 	}
 
 }
-
