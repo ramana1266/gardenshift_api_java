@@ -1578,6 +1578,35 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 	}catch(Exception e){return Response.status(500).entity("failed").build();}
 
 }
+@Path("get_bulletin_count/{username}")
+@GET
+	public Response get_bulletin_count(@PathParam("username") String username) {
+
+	/*
+	 * gives the bulletin  notifications count of a user.
+	 */
+
+	
+	try {
+		
+		DBCollection collection = db.getCollection("users");
+        BasicDBObject getNotif = new BasicDBObject();
+        getNotif.put("username", username);
+
+        BasicDBObject keys = new BasicDBObject();
+        keys.put("bulletin" ,1 );
+        DBCursor cursor = collection.find( getNotif, keys);
+        
+        int count=0;
+
+    		while (cursor.hasNext()) {
+    			count+=1 ;
+    		}
+
+            return Response.status(200).entity(count).build();
+	}catch(Exception e){return Response.status(500).entity("null").build();}
+
+}
 
 	@Path("add_friends")
 	@POST
