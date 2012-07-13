@@ -165,50 +165,30 @@ public class Gardenshift {
 					feedback.put("from", "");
 					feedback.put("text", "");
 					document.put("feedback", feedback);
+					
+					document.put("notifications_read", new ArrayList());
 
-					BasicDBObject notifications_read = new BasicDBObject();
-					
-					notifications_read.put("from", "");
-					notifications_read.put("text", "");
-					notifications_read.put("type", "");
-					notifications_read.put("timestamp", "");
-					document.put("notifications_read", notifications_read);
-					
-					BasicDBObject notifications_unread = new BasicDBObject();
-					
-					notifications_unread.put("from", "");
-					notifications_unread.put("text", "");
-					notifications_unread.put("type", "");
-					notifications_unread.put("timestamp", "");
-					document.put("notifications_unread", notifications_unread);
-					
-					BasicDBObject bulletin = new BasicDBObject();
-					
-					bulletin.put("from", "");
-					
-					document.put("bulletin", bulletin);
-					BasicDBObject bulletin_archive = new BasicDBObject();
-					
-					bulletin_archive.put("from", "");
-					
-					document.put("bulletin_archive", bulletin_archive);
-					
-					
+                    document.put("notifications_unread", new ArrayList());
+                    document.put("bulletin", new ArrayList());
+
+
+                    document.put("bulletin_archive", new ArrayList());
 
 					BasicDBObject friends = new BasicDBObject();
 					friends.put("friends_username", "");
 					friends.put("status", "");
 					friends.put("friends", friends);
 
-					BasicDBObject user_crops = new BasicDBObject();
-					user_crops.put("crop_name", "");
-					user_crops.put("crop_expected_quantity", "");
-					user_crops.put("crop_harvest_date", "");
-					user_crops.put("crop_harvested", "");
-					user_crops.put("pictures", "");
-					user_crops.put("videos", "");
-					user_crops.put("comments", "");
-					document.put("user_crops", user_crops);
+//					BasicDBObject user_crops = new BasicDBObject();
+//					user_crops.put("crop_name", "");
+//					user_crops.put("crop_expected_quantity", "");
+//					user_crops.put("crop_harvest_date", "");
+//					user_crops.put("crop_harvested", "");
+//					user_crops.put("pictures", "");
+//					user_crops.put("videos", "");
+//					user_crops.put("comments", "");
+//					document.put("user_crops", user_crops);
+					 document.put("user_crops", new ArrayList());
 					
 					collection.insert(document);
 					
@@ -1654,6 +1634,20 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 			temp.put("$push", new BasicDBObject("friends", document));
 
 			collection.update(update, temp, true, true);
+			
+			
+			BasicDBObject update1 = new BasicDBObject();
+			update1.put("username", username);
+
+			BasicDBObject document1 = new BasicDBObject();
+
+			document1.put("friends_username", friend_name);
+			document1.put("status", "pending");
+
+			BasicDBObject temp1 = new BasicDBObject();
+			temp1.put("$push", new BasicDBObject("friends", document1));
+
+			collection.update(update1, temp1, true, true);
 
 			return Response.status(200).entity("success").build();
 
