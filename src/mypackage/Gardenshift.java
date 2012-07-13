@@ -166,11 +166,34 @@ public class Gardenshift {
 					feedback.put("text", "");
 					document.put("feedback", feedback);
 
-					BasicDBObject notification = new BasicDBObject();
-					notification.put("from", "");
-					notification.put("text", "");
-					notification.put("type", "");
-					document.put("notification", notification);
+					BasicDBObject notifications_read = new BasicDBObject();
+					
+					notifications_read.put("from", "");
+					notifications_read.put("text", "");
+					notifications_read.put("type", "");
+					notifications_read.put("timestamp", "");
+					document.put("notifications_read", notifications_read);
+					
+					BasicDBObject notifications_unread = new BasicDBObject();
+					
+					notifications_unread.put("from", "");
+					notifications_unread.put("text", "");
+					notifications_unread.put("type", "");
+					notifications_unread.put("timestamp", "");
+					document.put("notifications_unread", notifications_unread);
+					
+					BasicDBObject bulletin = new BasicDBObject();
+					
+					bulletin.put("from", "");
+					
+					document.put("bulletin", bulletin);
+					BasicDBObject bulletin_archive = new BasicDBObject();
+					
+					bulletin_archive.put("from", "");
+					
+					document.put("bulletin_archive", bulletin_archive);
+					
+					
 
 					BasicDBObject friends = new BasicDBObject();
 					friends.put("friends_username", "");
@@ -1692,6 +1715,40 @@ public Response search_user_Crop(@PathParam("zipcode") String zipcode, @PathPara
 			collection.update(update2, temp2, true, true);
 
 			return Response.status(200).entity("success").build();
+
+		} catch (Exception e) {
+			return Response.status(503).entity("failed").build();
+		}
+
+	}
+	@Path("add_feedback")
+	@POST
+	public Response addFeedback(@FormParam("from") String from, @FormParam("to") String to,
+			@FormParam("status_txt") String status_txt )
+			 {
+
+		/*
+		 * Add a new status to user's database
+		 */
+
+		
+		try {
+					DBCollection collection = db.getCollection("users");
+					BasicDBObject update = new BasicDBObject();
+		            update.put("username", to);
+	
+		           
+		            BasicDBObject document = new BasicDBObject();
+	            
+	                document.put("text", status_txt);
+	                document.put("from", from);               
+	                
+	                BasicDBObject temp = new BasicDBObject();
+	                temp.put("$push", new BasicDBObject("feedback", document));
+
+	                collection.update(update, temp, true, true);
+
+	                return Response.status(200).entity("success").build();
 
 		} catch (Exception e) {
 			return Response.status(503).entity("failed").build();
