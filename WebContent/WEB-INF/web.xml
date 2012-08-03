@@ -5,6 +5,10 @@
 <param-name>javax.ws.rs.Application</param-name>
 <param-value>mypackage.MyRESTApplication</param-value>
 </context-param>
+ <context-param>
+      <param-name>resteasy.providers</param-name>
+      <param-value>mypackage.RestSecurityInterceptor</param-value>
+   </context-param>
 <listener>
 <listener-class>
 org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap
